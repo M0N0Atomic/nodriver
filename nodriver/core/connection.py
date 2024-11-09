@@ -496,17 +496,11 @@ class Connection(metaclass=CantTouchThis):
 
         if getattr(self, "_prep_headless_done", None):
             return
-        response, error = await self._send_oneshot(
-            cdp.runtime.evaluate(
-                expression="navigator.userAgent",
-                user_gesture=True,
-                await_promise=True,
-                return_by_value=True,
-                allow_unsafe_eval_blocked_by_csp=True,
-            )
+        response = await self._send_oneshot(
+            cdp.browser.get_version(),
         )
-        if response and response.value:
-            ua = response.value
+        if response:  # (protocolVersion, product, revision, userAgent, jsVersion)
+            ua = response[-2]
             await self._send_oneshot(
                 cdp.network.set_user_agent_override(
                     user_agent=ua.replace("Headless", ""),
